@@ -69,7 +69,7 @@ async function createJob() {
 // ==========================
 async function loadCandidates() {
   try {
-    const data = await apiRequest("/candidates");
+    const data = await apiRequest("/admin/resumes");
 
     const container = document.getElementById("candidateList");
 

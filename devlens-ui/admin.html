@@ -783,29 +783,61 @@
                 <span class="tag tag-dim">NEW ROLE</span>
               </div>
 
-              <div class="form-grid">
-                <div class="form-cell">
-                  <label class="form-label">Job Title</label>
-                  <input id="jobTitle" class="form-input" placeholder="e.g. Senior Frontend Engineer">
-                </div>
-                <div class="form-cell">
-                  <label class="form-label">Department</label>
-                  <input id="department" class="form-input" placeholder="e.g. Engineering">
-                </div>
-                <div class="form-cell">
-                  <label class="form-label">Required Skills</label>
-                  <input id="skills" class="form-input" placeholder="React, TypeScript, Node.js">
-                  <span class="form-hint">Comma-separated</span>
-                </div>
-                <div class="form-cell">
-                  <label class="form-label">Experience Level</label>
-                  <input id="experience" class="form-input" placeholder="e.g. 3–5 years">
-                </div>
-                <div class="form-cell full">
-                  <label class="form-label">Job Description</label>
-                  <textarea id="jobDesc" class="form-input" placeholder="Outline responsibilities, expectations, and team context…"></textarea>
-                </div>
-              </div>
+             <div class="form-grid">
+
+  <!-- Job Title -->
+  <div class="form-cell">
+    <label class="form-label">Job Title</label>
+    <input  id="jobTitle" class="form-input" list="jobList" placeholder="Select or type role" >
+        
+    <datalist id="jobList">
+      <option value="Frontend Developer">
+      <option value="Backend Developer">
+      <option value="Full Stack Developer">
+      <option value="UI/UX Designer">
+      <option value="DevOps Engineer">
+    </datalist>
+  </div>
+
+  <!-- Department -->
+  <div class="form-cell">
+    <label class="form-label">Department</label>
+    <select id="department" class="form-input">
+      <option value="">Select Department</option>
+      <option>Engineering</option>
+      <option>Design</option>
+      <option>Marketing</option>
+      <option>HR</option>
+    </select>
+  </div>
+
+  <!-- Skills -->
+  <div class="form-cell">
+    <label class="form-label">Required Skills</label>
+   <select id="skills" class="form-input" multiple></select>
+      
+    <span class="form-hint">Hold CTRL to select multiple</span>
+  </div>
+
+  <!-- Experience -->
+  <div class="form-cell">
+    <label class="form-label">Experience Level</label>
+    <select id="experience" class="form-input">
+      <option value="">Select Experience</option>
+      <option>0–1 years</option>
+      <option>1–3 years</option>
+      <option>3–5 years</option>
+      <option>5+ years</option>
+    </select>
+  </div>
+
+  <!-- Description -->
+  <div class="form-cell full">
+    <label class="form-label">Job Description</label>
+    <textarea id="jobDesc" class="form-input" placeholder="Outline responsibilities..."></textarea>
+  </div>
+
+</div>
 
               <div class="form-actions">
                 <button class="btn btn-primary" onclick="createJob()">
@@ -899,12 +931,22 @@
                 <span class="tag tag-dim">Filter</span>
               </div>
             </div>
-            <div id="candidateList">
-              <div class="empty" id="emptyState">
-                <div class="empty-icon">◈ ◈ ◈</div>
-                <div class="empty-msg">No Candidates Yet</div>
-                <div class="empty-hint">Publish a job role to begin receiving applications</div>
-              </div>
+           <div id="candidateList">
+  <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>File</th>
+          <th>Skills</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="resumeTable"></tbody>
+    </table>
+  </div>
+</div>
+              <div class="empty" id="emptyState" style="display:none;"></div>
             </div>
           </div>
 
@@ -938,13 +980,20 @@
   });
 
   /* Section switch */
-  function showSection(id, btn) {
-    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    document.getElementById('breadcrumb').textContent = id.toUpperCase();
+ function showSection(id, btn) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  document.getElementById('breadcrumb').textContent = id.toUpperCase();
+
+  // 🔥 THIS LINE IS IMPORTANT
+  if (id === "candidates") {
+    loadResumes();
   }
+}
 
   /* Create Job */
   const names = ['Jordan Lee','Aisha Patel','Marco Silva','Priya Nair','Sam Chen','Dana Wu','Arjun Mehta','Leila Ortiz'];
@@ -962,7 +1011,8 @@
       return;
     }
 
-    const skills = document.getElementById('skills').value.trim();
+    const skillsSelect = document.getElementById("skills");
+const skills = Array.from(skillsSelect.selectedOptions).map(o => o.value).join(", ");
     seedCandidate(title, skills);
 
     // Animate bars
@@ -1039,6 +1089,94 @@ if (role !== "ADMIN") {
   window.location.href = "index.html";
 }
 
+async function loadResumes() {
+  try {
+    const res = await fetch("http://localhost:8080/admin/resumes");
+    const data = await res.json();
+
+    console.log("ADMIN DATA:", data);
+
+    const table = document.getElementById("resumeTable");
+
+    if (!data.length) {
+      table.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
+      return;
+    }
+
+    table.innerHTML = data.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.fileUrl}</td>
+        <td>${c.extractedSkills}</td>
+        <td>${c.score ? c.score + "%" : "N/A"}</td>
+      </tr>
+    `).join("");
+
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
+window.onload = () => {
+  loadSkillOptions(); // 🔥 add this
+  loadResumes();
+};
+// 🔥 MASTER SKILLS
+const ALL_SKILLS = [
+  "HTML","CSS","JavaScript","TypeScript","React","Next.js","Vue.js","Angular",
+  "Tailwind CSS","Bootstrap","Material UI","Redux",
+
+  "Java","Spring Boot","Node.js","Express.js","Python","Django","Flask",
+  ".NET","C#","PHP","Laravel",
+
+  "MySQL","PostgreSQL","MongoDB","Firebase","Redis",
+
+  "Docker","Kubernetes","AWS","CI/CD","Jenkins",
+
+  "Git","GitHub","Postman",
+
+  "Figma","Adobe XD","UI Design","UX Research","Prototyping",
+
+  "Jest","Cypress","Selenium",
+
+  "REST API","GraphQL","Microservices"
+];
+
+// 🔥 ROLE → SKILL MAP
+const roleSkillsMap = {
+  "Frontend Developer": ["HTML","CSS","JavaScript","React","Tailwind CSS"],
+  "Backend Developer": ["Java","Spring Boot","Node.js","SQL","REST API"],
+  "Full Stack Developer": ["HTML","CSS","JavaScript","React","Node.js","MongoDB"],
+  "UI/UX Designer": ["Figma","UI Design","UX Research","Prototyping"],
+  "DevOps Engineer": ["Docker","Kubernetes","AWS","CI/CD","Jenkins"]
+};
+
+function loadSkillOptions() {
+  const select = document.getElementById("skills");
+
+  select.innerHTML = ALL_SKILLS.map(skill =>
+    `<option value="${skill}">${skill}</option>`
+  ).join("");
+}
+
+function autoFillSkills(role) {
+  const skillsSelect = document.getElementById("skills");
+
+  // clear selection
+  Array.from(skillsSelect.options).forEach(opt => opt.selected = false);
+
+  const skills = roleSkillsMap[role] || [];
+
+  Array.from(skillsSelect.options).forEach(opt => {
+    if (skills.includes(opt.value)) {
+      opt.selected = true;
+    }
+  });
+}
+
+document.getElementById("jobTitle").addEventListener("change", (e) => {
+  autoFillSkills(e.target.value);
+});
 </script>
 </body>
 </html>

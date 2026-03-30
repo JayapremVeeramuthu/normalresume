@@ -1,16 +1,19 @@
-const BASE_URL = "http://localhost:8080/api";
+async function analyzeResume() {
+  const file = document.getElementById("file").files[0];
 
-async function apiRequest(endpoint, method = "GET", data = null) {
-  const token = localStorage.getItem("token");
+  if (!file) {
+    alert("Upload file bro 😅");
+    return;
+  }
 
-  const res = await fetch(BASE_URL + endpoint, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": token ? `Bearer ${token}` : ""
-    },
-    body: data ? JSON.stringify(data) : null
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("http://localhost:8080/api/candidate/upload", {
+    method: "POST",
+    body: formData // 🔥 NO headers here
   });
 
-  return res.json();
+  const data = await res.json();
+  console.log("RESULT:", data);
 }
