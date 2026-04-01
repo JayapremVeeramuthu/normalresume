@@ -1,7 +1,0 @@
-package com.devlens.devlensai.repository;
-
-import com.devlens.devlensai.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface UserRepository extends JpaRepository<User, Long> {
-}

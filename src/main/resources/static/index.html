@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer - Candidate Portal</title>
+    <meta name="description" content="AI-Powered ATS system to match your resume with the perfect job">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container candidate-portal">
+        <header>
+            <h1><i class="ri-blaze-fill"></i> ResumAI Gen</h1>
+            <p>Upload your resume and let our AI engine match you instantly!</p>
+            <nav>
+                <a href="index.html" class="active"><i class="ri-user-smile-line"></i> Candidate Portal</a>
+                <a href="admin.html"><i class="ri-dashboard-fill"></i> Admin Dashboard</a>
+            </nav>
+        </header>
+
+        <section class="upload-section">
+            <h2><i class="ri-upload-cloud-2-line"></i> Analyze Resume</h2>
+            
+            <div class="input-group">
+                <label for="roleSelect">Target Job Role</label>
+                <select id="roleSelect">
+                    <option value="">-- Select a Target Role --</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="resumeFile">Select Resume Document (PDF/DOCX)</label>
+                <input type="file" id="resumeFile" accept=".pdf,.doc,.docx" />
+            </div>
+
+            <button onclick="uploadResume()" id="uploadBtn">
+                <i class="ri-magic-line"></i> Start AI Analysis
+            </button>
+            
+            <div id="loader" class="hidden loader-container">
+                <div class="spinner"></div>
+                <p>AI is scanning and matching skills...</p>
+            </div>
+        </section>
+
+        <section id="resultSection" class="hidden result-section">
+            <h2><i class="ri-bar-chart-box-line"></i> Analysis Results</h2>
+            <div class="result-card">
+                <div class="score-container">
+                    <div class="score-circle" id="scoreCircle">
+                        <div class="score-inner" id="scoreValue">0%</div>
+                    </div>
+                </div>
+                
+                <div class="details">
+                    <h3>Compatibility Score</h3>
+                    
+                    <label>Matched Skills</label>
+                    <div id="extractedSkills" class="skill-list"></div>
+                    
+                    <label style="margin-top:1rem;color:var(--text-secondary)">Missing Skills</label>
+                    <div id="missingSkills" class="skill-list"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

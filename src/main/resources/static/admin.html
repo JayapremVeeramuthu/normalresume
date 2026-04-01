@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer - Admin Portal</title>
+    <meta name="description" content="Manage jobs and view qualified candidates AI matcher">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container admin-portal">
+        <header>
+            <h1><i class="ri-blaze-fill"></i> ResumAI Admin</h1>
+            <p>Define new jobs & Monitor top candidates effortlessly.</p>
+            <nav>
+                <a href="index.html"><i class="ri-user-smile-line"></i> Candidate Portal</a>
+                <a href="admin.html" class="active"><i class="ri-dashboard-fill"></i> Admin Dashboard</a>
+            </nav>
+        </header>
+
+        <section class="admin-section">
+            <h2><i class="ri-briefcase-add-fill"></i> Create / Manage Jobs</h2>
+            <div class="job-form form-grid">
+                <div class="input-group full-width" style="margin-bottom: 1rem;">
+                    <label for="roleSelect">Select Predefined Role</label>
+                    <select id="roleSelect" onchange="populateRoleData()">
+                        <option value="">-- Choose a Role --</option>
+                        <option value="frontend">Frontend Developer</option>
+                        <option value="backend">Backend Developer</option>
+                        <option value="fullstack">Full Stack Developer</option>
+                        <option value="uiux">UI/UX Designer</option>
+                        <option value="devops">DevOps Engineer</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="jobTitle">Job Title</label>
+                    <input type="text" id="jobTitle" placeholder="e.g. Senior Frontend Developer" required/>
+                </div>
+                <div class="input-group">
+                    <label for="jobDepartment">Department</label>
+                    <input type="text" id="jobDepartment" placeholder="e.g. Engineering" required/>
+                </div>
+                <div class="input-group full-width">
+                    <label for="jobExperience">Required Experience</label>
+                    <input type="text" id="jobExperience" placeholder="e.g. 5+ years" required/>
+                </div>
+                
+                <div class="input-group full-width">
+                    <label for="jobSkills">Required Skills (Comma separated)</label>
+                    <textarea id="jobSkills" placeholder="React, Nextjs, UI/UX, CSS, Nodejs" required></textarea>
+                </div>
+                
+                <div class="input-group full-width">
+                    <label for="jobDescription">Job Description</label>
+                    <textarea id="jobDescription" placeholder="A brief description of what you are looking for..."></textarea>
+                </div>
+                
+                <div class="full-width">
+                    <button onclick="saveJob()"><i class="ri-save-line"></i> Save / Publish Job</button>
+                </div>
+            </div>
+            
+            <h3 style="margin-top:2rem;"><i class="ri-list-check"></i> Active Jobs</h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Title & Dept</th>
+                            <th>Target Skills</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobsTableBody">
+                        <tr><td colspan="4" style="text-align:center;">Loading Jobs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2><i class="ri-user-star-fill" style="color:var(--success)"></i> Matched Candidates (> 50%)</h2>
+                <button onclick="fetchMatchedResumes()" class="secondary-btn" style="padding:0.5rem 1rem; width:auto;"><i class="ri-refresh-line"></i> Reload</button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Resume Name</th>
+                            <th>Matched Skills</th>
+                            <th>Target Job</th>
+                            <th>Match Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resumesTableBody">
+                        <tr><td colspan="5" style="text-align:center;">Loading Candidates...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

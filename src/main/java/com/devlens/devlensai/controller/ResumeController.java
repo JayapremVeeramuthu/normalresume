@@ -1,122 +1,67 @@
 package com.devlens.devlensai.controller;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.devlens.devlensai.dto.ResumeUploadResponse;
+import com.devlens.devlensai.entity.Resume;
+import com.devlens.devlensai.service.ResumeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.devlens.devlensai.entity.Resume;
-import com.devlens.devlensai.repository.ResumeRepository;
-import com.devlens.devlensai.service.ResumeService;
+import java.util.List;
 
 @RestController
-@RequestMapping("/candidate")
-@CrossOrigin   // 🔥 IMPORTANT (frontend connection)
+@RequestMapping("/api")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ResumeController {
 
-    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
+    private final ResumeService resumeService;
 
-    @Autowired
-    private ResumeService resumeService;
+    @PostMapping("/candidate/upload")
+    public ResponseEntity<?> uploadResume(@RequestParam(value = "file", required = false) MultipartFile file, @RequestParam(value = "role", required = false) String role) {
+        System.out.println("=== API HIT ===");
+        System.out.println("ROLE: " + role);
+        System.out.println("FILE: " + (file != null ? file.getOriginalFilename() : "null"));
 
-    @Autowired
-    private ResumeRepository resumeRepository; // 🔥 ADD THIS
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("File is missing");
+        }
 
-    @PostMapping("/upload")
-    public Object uploadResume(@RequestParam("file") MultipartFile file) {
+        if (role == null || role.isEmpty()) {
+            throw new RuntimeException("Role is missing");
+        }
 
         try {
-
-            // ❌ Empty check
-            if (file.isEmpty()) {
-                return "❌ File is empty!";
+            ResumeUploadResponse response = resumeService.processResume(file, role);
+            if (response == null || response.getResume() == null) {
+                return ResponseEntity.status(500).body(java.util.Map.of("error", "Analysis failed: internal error"));
             }
-
-            // 📁 Create folder
-            File uploadDir = new File(UPLOAD_DIR);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
-
-            // 🛡 Safe filename
-            String fileName = file.getOriginalFilename();
-            if (fileName == null || fileName.contains("..")) {
-                return "❌ Invalid file name!";
-            }
-
-            // 💾 Save file
-            String filePath = UPLOAD_DIR + fileName;
-            file.transferTo(new File(filePath));
-
-            // 🔥 TEXT EXTRACTION
-            String content = resumeService.extractText(filePath);
-            String lower = content.toLowerCase();
-
-            // 🔥 SKILLS LIST
-            String[] skillsList = {
-                "figma", "ui", "ux", "user experience", "user interface",
-                "design", "wireframe", "prototype",
-                "photoshop", "illustrator",
-                "html", "css", "javascript",
-                "java", "spring", "react"
-            };
-
-            List<String> matchedSkills = new ArrayList<>();
-
-            for (String skill : skillsList) {
-                if (lower.contains(skill)) {
-                    matchedSkills.add(skill);
-                }
-            }
-
-            // 🔥 FALLBACK
-            if (matchedSkills.isEmpty()) {
-                matchedSkills.add("general skills");
-                matchedSkills.add("communication");
-            }
-
-            // 🔥 SCORE
-            int score = (matchedSkills.size() * 100) / skillsList.length;
-
-            // 🔥 SUGGESTIONS
-            List<String> suggestions = new ArrayList<>();
-            if (score < 50) {
-                suggestions.add("Add more relevant technical skills");
-                suggestions.add("Improve project descriptions");
-            } else if (score < 80) {
-                suggestions.add("Good profile, add advanced tools or certifications");
-            } else {
-                suggestions.add("Excellent resume, ready for top roles");
-            }
-
-            // 🔥 SAVE TO DATABASE (THIS WAS MISSING)
-            Resume resume = new Resume();
-            resume.setFileUrl(fileName);
-            resume.setExtractedSkills(String.join(",", matchedSkills));
-            resume.setExperienceYears(0);
-
-            resumeRepository.save(resume);
-
-            // 🔥 RESPONSE
-            Map<String, Object> response = new HashMap<>();
-            response.put("score", score);
-            response.put("skills", matchedSkills);
-            response.put("suggestions", suggestions);
-
-            return response;
-
+            
+            double score = response.getResume().getMatchScore();
+            java.util.List<String> matchedSkills = response.getResume().getExtractedSkills();
+            java.util.List<String> missingSkills = response.getMissingSkills();
+            
+            System.out.println("FINAL RESPONSE: " + score + matchedSkills + missingSkills);
+            
+            return ResponseEntity.ok(java.util.Map.of(
+                "matchScore", score,
+                "matchedSkills", matchedSkills,
+                "missingSkills", missingSkills
+            ));
         } catch (Exception e) {
             e.printStackTrace();
-            return "❌ Error: " + e.getMessage();
+            return ResponseEntity.status(500).body(java.util.Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
+    }
+
+    @GetMapping("/admin/resumes")
+    public ResponseEntity<List<Resume>> getMatchedResumes() {
+        return ResponseEntity.ok(resumeService.getMatchedResumes());
+    }
+
+    @GetMapping("/admin/resumes/selected")
+    public ResponseEntity<List<Resume>> getSelectedResumes() {
+        return ResponseEntity.ok(resumeService.getSelectedResumes());
     }
 }
